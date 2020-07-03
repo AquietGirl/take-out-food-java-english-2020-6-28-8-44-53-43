@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 
 /*
@@ -13,8 +14,51 @@ public class App {
     }
 
     public String bestCharge(List<String> inputs) {
-        //TODO: write code here
+        List<Item> allItems = itemRepository.findAll();
+        List<SalesPromotion> allSalesPromotion = salesPromotionRepository.findAll();
+        SalesPromotion halfSalesPromotion = allSalesPromotion.get(1);
+        List<String> specialItems = halfSalesPromotion.getRelatedItems();
+        List<String> halfItem = new ArrayList<>();
+        int totalPrice = 0;
+        int promotion = 0;
+        int halfPromotion = 0;
+        int deductPromotion = 0;
+        String str = "";
 
-        return null;
+        str += "============= Order details =============\n";
+        for (String inputItem : inputs) {
+            String[] inputItems = inputItem.split(" x ");
+            for (Item item : allItems) {
+                if (item.getId().equals(inputItems[0])) {
+                    int prices = (int) (item.getPrice() * Integer.parseInt(inputItems[1]));
+                    str += item.getName() + " x " + inputItems[1] + " = " + prices + " yuan\n";
+                    totalPrice += prices;
+                    for (String specialItem : specialItems) {
+                        if (specialItem.equals(inputItems[0])) {
+                            halfPromotion += item.getPrice() * Integer.parseInt(inputItems[1]) / 2;
+                            halfItem.add(item.getName());
+                        }
+                    }
+                }
+            }
+        }
+        if (totalPrice > 30) {
+            deductPromotion = 6;
+        }
+        if (halfPromotion != 0 && halfPromotion >= deductPromotion) {
+            str += "-----------------------------------\n";
+            str += "Promotion used:\n";
+            promotion = halfPromotion;
+            str += halfSalesPromotion.getDisplayName() + " (" + String.join("，", halfItem) + ")，saving " + halfPromotion + " yuan\n";
+        } else if (halfPromotion < deductPromotion){
+            str += "-----------------------------------\n";
+            str += "Promotion used:\n";
+            promotion = deductPromotion;
+            str += "满30减6 yuan，saving 6 yuan\n";
+        }
+        str += "-----------------------------------\n";
+        str += "Total：" + (totalPrice - promotion) + " yuan\n";
+        str += "===================================";
+        return str;
     }
 }
